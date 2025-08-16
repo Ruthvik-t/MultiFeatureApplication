@@ -5,11 +5,11 @@ plugins {
 }
 
 android {
-    namespace = "com.example.multifeature"
+    namespace = "com.ruthvik.multifeature"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.example.myapplication"
+        applicationId = "com.ruthvik.multifeature.myapplication"
         minSdk = 24
         targetSdk = 36
         versionCode = 1
@@ -56,4 +56,7 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+
+    //lib room
+    implementation(project(":lib-room"))
 }

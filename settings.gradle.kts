@@ -22,4 +22,3 @@ dependencyResolutionManagement {
 rootProject.name = "My Application"
 include(":app")
 include(":lib-room")
-include(":lib-room")

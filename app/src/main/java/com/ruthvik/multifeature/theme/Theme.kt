@@ -1,4 +1,4 @@
-package com.example.multifeature.ui.theme
+package com.ruthvik.multifeature.theme
 
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme

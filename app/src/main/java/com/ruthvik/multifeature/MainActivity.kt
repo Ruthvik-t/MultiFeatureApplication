@@ -1,4 +1,4 @@
-package com.example.multifeature
+package com.ruthvik.multifeature
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -12,7 +12,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.example.multifeature.ui.theme.MyApplicationTheme
+import com.ruthvik.multifeature.theme.MyApplicationTheme
+import com.ruthvik.multifeature.lib_room.DatabaseModule
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -25,6 +26,14 @@ class MainActivity : ComponentActivity() {
                         name = "Android",
                         modifier = Modifier.padding(innerPadding).padding(16.dp)
                     )
+
+                    val database = DatabaseModule.provideDatabase(this)
+                    val userDao = DatabaseModule.provideUserDao(database)
+
+//                    lifecycleScope.launch {
+//                        userDao.insertUser(User(name = "Ruthvik", email = "test@gmail.com", password = "Test"))
+//
+//                    }
                 }
             }
         }
