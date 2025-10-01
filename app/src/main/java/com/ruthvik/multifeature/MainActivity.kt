@@ -10,6 +10,8 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.BasicAlertDialog
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -26,7 +28,9 @@ import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.rememberSavedStateNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
+import com.ruthvik.multifeature.common.AppTextView
 import com.ruthvik.multifeature.common.LoadingProgressBar
+import com.ruthvik.multifeature.common.TypographyType
 import com.ruthvik.multifeature.navigation.MainScreen
 import com.ruthvik.multifeature.theme.MyApplicationTheme
 import com.ruthvik.multifeature.ui.AnonymousScreen
@@ -106,6 +110,7 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    @OptIn(ExperimentalMaterial3Api::class)
     @Composable
     private fun MainScreenContent(
         uiState: UiState,
@@ -137,7 +142,18 @@ class MainActivity : ComponentActivity() {
                is UiState.LaunchRegisterScreen -> {
                    backstack.add(MainScreen.RegisterScreen)
                }
-               else -> { }
+               is UiState.Error -> {
+                   Text(text = uiState.throwable.message?: "Unknown error")
+                   BasicAlertDialog(
+                       onDismissRequest = { }
+                   ) {
+                       AppTextView(
+                           text = uiState.throwable.message?: "Unknown error",
+                           typographyType = TypographyType.Label,
+                           modifier = Modifier.padding(top = 8.dp)
+                       )
+                   }
+               }
            }
         }
     }

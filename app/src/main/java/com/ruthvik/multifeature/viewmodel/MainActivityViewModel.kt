@@ -33,10 +33,13 @@ class MainActivityViewModel(
 
     fun registerUser(user: User) {
         viewModelScope.launch {
-            userRepository.insertUser(user)
-            saveUserEmail(user.email)
-            delay(3000L)
-            _uiState.value = UiState.LoggedInState(isLoggedIn = true, userEmail = user.email)
+            if(userRepository.insertUser(user)) {
+                saveUserEmail(user.email)
+                delay(3000L)
+                _uiState.value = UiState.LoggedInState(isLoggedIn = true, userEmail = user.email)
+            } else {
+                _uiState.value = UiState.Error(Throwable("User already registered"))
+            }
         }
     }
 
