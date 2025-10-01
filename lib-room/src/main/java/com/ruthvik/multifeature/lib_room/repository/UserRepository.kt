@@ -7,7 +7,7 @@ interface UserRepository {
 
     fun getAllUsers(): Flow<List<User>>
 
-    suspend fun insertUser(user: User)
+    suspend fun insertUser(user: User): Boolean
 
     fun getUserByEmail(email: String): Flow<User>
 }

@@ -9,8 +9,13 @@ class UserRepositoryImpl(private val userDao: UserDao) : UserRepository {
         return userDao.getAllUsers()
     }
 
-    override suspend fun insertUser(user: User) {
-        userDao.insert(user)
+    override suspend fun insertUser(user: User): Boolean {
+        return try {
+            val rowId = userDao.insert(user)
+            rowId > 0
+        } catch (e: Exception) {
+            false
+        }
     }
 
     override fun getUserByEmail(email: String): Flow<User> {

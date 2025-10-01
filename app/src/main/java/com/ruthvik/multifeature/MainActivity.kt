@@ -6,25 +6,33 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Button
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
+import androidx.navigation3.runtime.NavBackStack
+import androidx.navigation3.runtime.entry
+import androidx.navigation3.runtime.entryProvider
+import androidx.navigation3.runtime.rememberNavBackStack
+import androidx.navigation3.runtime.rememberSavedStateNavEntryDecorator
+import androidx.navigation3.ui.NavDisplay
 import com.ruthvik.multifeature.common.LoadingProgressBar
+import com.ruthvik.multifeature.navigation.MainScreen
 import com.ruthvik.multifeature.theme.MyApplicationTheme
+import com.ruthvik.multifeature.ui.AnonymousScreen
+import com.ruthvik.multifeature.ui.HomeScreen
+import com.ruthvik.multifeature.ui.RegisterScreen
+import com.ruthvik.multifeature.ui.SignInScreen
 import com.ruthvik.multifeature.viewmodel.MainActivityViewModel
 import com.ruthvik.multifeature.viewmodel.UiState
 
@@ -40,12 +48,58 @@ class MainActivity : ComponentActivity() {
         setContent {
             MyApplicationTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    val uiState by mainActivityViewModel.uiState.collectAsState()
+                    val uiState by mainActivityViewModel.uiState.collectAsStateWithLifecycle()
+                    val mainScreenBackStack = rememberNavBackStack<MainScreen>(MainScreen.Loading)
+
+                    NavDisplay(
+                        backStack = mainScreenBackStack,
+                        onBack = {
+                            mainScreenBackStack.removeLastOrNull()
+                                 },
+                        entryDecorators = listOf(
+                            rememberSavedStateNavEntryDecorator(),
+                            rememberViewModelStoreNavEntryDecorator(),
+                        ),
+                        modifier = Modifier.padding(16.dp),
+                        entryProvider = entryProvider {
+                            entry<MainScreen.Loading> {
+                                Box(
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentAlignment = Alignment.Center) {
+                                    LoadingProgressBar()
+                                }
+                            }
+                            entry<MainScreen.AnonymousScreen> {
+                                AnonymousScreen(
+                                    onSignInClicked = { mainActivityViewModel.updateUiState(UiState.LaunchSignInScreen) },
+                                    onRegisterClicked = { mainActivityViewModel.updateUiState(UiState.LaunchRegisterScreen) }
+                                )
+                            }
+                            entry<MainScreen.LoginScreen> {
+                                Box(
+                                    modifier = Modifier.fillMaxSize().padding(top = 32.dp),
+                                    contentAlignment = Alignment.TopCenter,
+                                ) {
+                                    SignInScreen {
+                                        // to be implemented
+                                    }
+                                }
+                            }
+                            entry<MainScreen.RegisterScreen> {
+                                RegisterScreen { user ->
+                                    mainActivityViewModel.updateUiState(UiState.Loading)
+                                    mainActivityViewModel.registerUser(user)
+                                }
+                            }
+                            entry<MainScreen.AuthorizedScreen> { entry ->
+                                HomeScreen(name = entry.email)
+                            }
+                        }
+                    )
                     MainScreenContent(
                         uiState = uiState,
                         modifier = Modifier.padding(innerPadding),
-                        onSignInClicked = { },
-                        onRegisterClicked = { },
+                        backstack = mainScreenBackStack,
                     )
                 }
             }
@@ -56,61 +110,36 @@ class MainActivity : ComponentActivity() {
     private fun MainScreenContent(
         uiState: UiState,
         modifier: Modifier = Modifier,
-        onSignInClicked: () -> Unit,
-        onRegisterClicked: () -> Unit
+        backstack: NavBackStack
     ) {
         Column(
-            modifier = modifier.fillMaxSize(),
+            modifier = modifier.fillMaxSize().padding(16.dp),
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
            when(uiState) {
-               UiState.Loading -> { LoadingProgressBar() }
+               UiState.Loading -> {
+                   if(backstack.isNotEmpty() && backstack.last() !is MainScreen.Loading) {
+                       backstack.add(MainScreen.Loading)
+                   }
+               }
                is UiState.LoggedInState -> {
                    if(uiState.isLoggedIn) {
-                       // show loggedIn screen
+                       backstack.add(MainScreen.AuthorizedScreen(uiState.userEmail.orEmpty()))
                    } else {
-                       AnonymousScreen(onSignInClicked, onRegisterClicked)
+                       backstack.removeLastOrNull()
+                       backstack.add(MainScreen.AnonymousScreen)
                    }
+               }
+               is UiState.LaunchSignInScreen -> {
+                   backstack.add(MainScreen.LoginScreen)
+               }
+               is UiState.LaunchRegisterScreen -> {
+                   backstack.add(MainScreen.RegisterScreen)
                }
                else -> { }
            }
         }
-    }
-}
-
-@Composable
-fun AnonymousScreen(
-    onSignInClicked: () -> Unit,
-    onRegisterClicked: () -> Unit
-) {
-    Column {
-        Greeting(
-            name = "Android",
-            modifier = Modifier.padding(16.dp)
-        )
-        Button(
-            modifier = Modifier.fillMaxWidth(),
-            onClick = { onSignInClicked.invoke() }
-        ){
-            Text(text = "Sign In")
-        }
-        Spacer(modifier = Modifier.height(8.dp))
-        OutlinedButton(
-            modifier = Modifier.fillMaxWidth(),
-            onClick = { onRegisterClicked.invoke() }
-        ) {
-            Text(text = "Register")
-        }
-    }
-
-}
-
-@Preview
-@Composable
-fun AnonymousScreenPreview() {
-    MyApplicationTheme {
-        AnonymousScreen(onSignInClicked = { }) { }
     }
 }
 
